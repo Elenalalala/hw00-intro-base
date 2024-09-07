@@ -14,11 +14,20 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  r:1,
-  g:0,
-  b:0,
-  a:1,
+  color: [255, 255, 255],
+  alpha: 1,
+  fragShader: 'Perlin Noise',
+  vertShader: 'Perlin Noise',
 };
+const shader_name = ['Perlin Noise', 'Lambert', 'FBM', 'Worley Noise'];
+const frag_name = {
+  perlin: './shaders/perlin-noise-frag.glsl',
+  lambert: './shaders/lambert-frag.glsl',
+}
+const vert_name = {
+  perlin: './shaders/perlin-noise-vert.glsl',
+  lambert: './shaders/lambert-vert.glsl',
+}
 
 let icosphere: Icosphere;
 let square: Square;
@@ -47,10 +56,10 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
-  gui.add(controls, 'r', 0, 1).step(0.1);
-  gui.add(controls, 'g', 0, 1).step(0.1);
-  gui.add(controls, 'b', 0, 1).step(0.1);
-  gui.add(controls, 'a', 0, 1).step(0.1);
+  gui.addColor(controls, 'color');
+  gui.add(controls, 'alpha', 0, 1).step(0.1);
+  gui.add(controls, 'fragShader', shader_name);
+  gui.add(controls, 'vertShader', shader_name);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -72,12 +81,12 @@ function main() {
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
-    new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
+    new Shader(gl.VERTEX_SHADER, require('./shaders/perlin-noise-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/perlin-noise-frag.glsl')),
   ]);
 
   // This function will be called every frame
-  function tick() {
+  function tick(now:number) {
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -93,7 +102,7 @@ function main() {
       // square,
       cube,
     ], 
-    vec4.fromValues(controls.r, controls.g, controls.b, controls.a));
+    vec4.fromValues(controls.color[0] / 255, controls.color[1] / 255, controls.color[2] / 255, controls.alpha));
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
@@ -111,7 +120,7 @@ function main() {
   camera.updateProjectionMatrix();
 
   // Start the render loop
-  tick();
+  requestAnimationFrame(tick);
 }
 
 main();
