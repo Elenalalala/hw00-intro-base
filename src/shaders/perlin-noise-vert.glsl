@@ -19,6 +19,8 @@ uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformati
                             // We've written a static matrix for you to use for HW2,
                             // but in HW3 you'll have to generate one yourself
 
+uniform float u_Time;
+
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
 in vec4 vs_Nor;             // The array of vertex normals passed to the shader
@@ -33,6 +35,12 @@ out vec4 fs_Pos;
 const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
                                         //the geometry in the fragment shader.
 
+float random3( vec3 p ) {
+    return fract(sin(dot(p, vec3(127.1, 311.7, 244.54))) * 763758.4453);
+}
+
+
+
 void main()
 {
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
@@ -44,12 +52,13 @@ void main()
                                                             // perpendicular to the surface after the surface is transformed by
                                                             // the model matrix.
 
-
-    vec4 modelposition = u_Model * vs_Pos;   // Temporarily store the transformed vertex positions for use below
+    float displacement = sin(vs_Pos.x * 10.0 +  u_Time) * random3(vs_Pos.xyz);
+    vec4 modelposition = u_Model * vec4(vs_Pos.x -  displacement, vs_Pos.y + displacement, vs_Pos.z, vs_Pos.w);   // Temporarily store the transformed vertex positions for use below
+    // vec4 modelposition = u_Model * (vs_Pos + vec4(random3(vs_Pos.xyz), 0));
 
     fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
 
-    gl_Position = u_ViewProj * modelposition;// gl_Position is a built-in variable of OpenGL which is
+    gl_Position = u_ViewProj * modelposition + sin(vec4(u_Time));// gl_Position is a built-in variable of OpenGL which is
                                              // used to render the final positions of the geometry's vertices
-    fs_Pos = gl_Position;
+    fs_Pos = gl_Position  + vec4( sin(u_Time), cos(u_Time),u_Time,0.f);
 }
